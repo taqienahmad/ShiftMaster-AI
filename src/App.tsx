@@ -120,8 +120,11 @@ export default function App() {
                 <Clock className="w-8 h-8 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-3xl font-bold tracking-tight">ShiftMaster AI</CardTitle>
-                <CardDescription className="text-slate-500 mt-2">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Clock className="w-8 h-8 text-primary" />
+                  <span className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">TransRosterAI</span>
+                </div>
+                <CardDescription className="text-slate-500 text-base">
                   Intelligent employee forecasting and scheduling for modern teams.
                 </CardDescription>
               </div>
@@ -145,10 +148,13 @@ export default function App() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
         <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Clock className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+            <Clock className="w-6 h-6 text-white" />
           </div>
-          <span className="font-bold text-xl tracking-tight">ShiftMaster</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-lg tracking-tight text-slate-900">TransRosterAI</span>
+            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Enterprise</span>
+          </div>
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
@@ -213,10 +219,10 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white border-bottom border-slate-200 flex items-center justify-between px-8 md:hidden">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 md:hidden">
            <div className="flex items-center gap-2">
             <Clock className="w-6 h-6 text-primary" />
-            <span className="font-bold text-lg">ShiftMaster</span>
+            <span className="font-bold text-lg">TransRosterAI</span>
           </div>
           <Button variant="ghost" size="icon" onClick={handleLogout}>
             <LogOut className="w-5 h-5" />
@@ -224,22 +230,24 @@ export default function App() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {activeTab === 'forecast-volume' && <ForecastVolume isAdmin={isAdmin} />}
-              {activeTab === 'shift-codes' && <ShiftCodeManager isAdmin={isAdmin} />}
-              {activeTab === 'employees' && <EmployeeList isAdmin={isAdmin} />}
-              {activeTab === 'forecast' && <ForecastView isAdmin={isAdmin} />}
-              {activeTab === 'roster' && <RosterView isAdmin={isAdmin} />}
-              {activeTab === 'working-days' && <WorkingDaysReference isAdmin={isAdmin} />}
-            </motion.div>
-          </AnimatePresence>
+          <div className={activeTab === 'forecast-volume' ? 'block' : 'hidden'}>
+            <ForecastVolume isAdmin={isAdmin} />
+          </div>
+          <div className={activeTab === 'shift-codes' ? 'block' : 'hidden'}>
+            <ShiftCodeManager isAdmin={isAdmin} />
+          </div>
+          <div className={activeTab === 'employees' ? 'block' : 'hidden'}>
+            <EmployeeList isAdmin={isAdmin} />
+          </div>
+          <div className={activeTab === 'working-days' ? 'block' : 'hidden'}>
+            <WorkingDaysReference isAdmin={isAdmin} />
+          </div>
+          <div className={activeTab === 'forecast' ? 'block' : 'hidden'}>
+            <ForecastView isAdmin={isAdmin} />
+          </div>
+          <div className={activeTab === 'roster' ? 'block' : 'hidden'}>
+            <RosterView isAdmin={isAdmin} />
+          </div>
         </div>
       </main>
       <Toaster position="top-right" />

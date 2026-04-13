@@ -313,6 +313,31 @@ export default function ShiftCodeManager({ isAdmin }: { isAdmin: boolean }) {
         )}
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Active Codes</p>
+              <p className="text-xl font-bold text-slate-900">{shiftCodes.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Time Coverage</p>
+              <p className="text-xl font-bold text-slate-900">24/7 Ready</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="border-none shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-slate-50">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, onSnapshot, query, setDoc, doc, Timestamp, OperationType, handleFirestoreError } from '../lib/firebase';
+import { db, collection, onSnapshot, query, setDoc, doc, deleteDoc, Timestamp, OperationType, handleFirestoreError } from '../lib/firebase';
 import { generateStaffingForecast, ForecastData } from '../lib/gemini';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,11 @@ export default function ForecastView({ isAdmin }: { isAdmin: boolean }) {
   const [volumeData, setVolumeData] = useState<ForecastVolumeData[]>([]);
   const [shiftCodes, setShiftCodes] = useState<ShiftCode[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [activeSubTab, setActiveSubTab] = useState(() => localStorage.getItem('forecastView_activeSubTab') || 'erlang');
+
+  useEffect(() => {
+    localStorage.setItem('forecastView_activeSubTab', activeSubTab);
+  }, [activeSubTab]);
 
   useEffect(() => {
     // Listen to AI Forecasts
@@ -128,9 +133,20 @@ export default function ForecastView({ isAdmin }: { isAdmin: boolean }) {
     }
   };
 
+  const handleClearForecasts = async () => {
+    if (!isAdmin) return;
+    try {
+      const promises = forecasts.map(f => deleteDoc(doc(db, 'forecasts', `forecast_${f.date}`)));
+      await Promise.all(promises);
+      toast.success('AI Forecast data cleared');
+    } catch (error) {
+      toast.error('Failed to clear forecast data');
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="erlang" className="w-full">
+      <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
         <div className="flex items-center justify-between mb-6">
           <TabsList className="bg-white border border-slate-200">
             <TabsTrigger value="erlang" className="gap-2">
@@ -160,14 +176,25 @@ export default function ForecastView({ isAdmin }: { isAdmin: boolean }) {
             </div>
 
             {isAdmin && (
-              <Button 
-                onClick={handleGenerateForecast} 
-                disabled={loading}
-                className="gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white border-none shadow-lg shadow-indigo-200"
-              >
-                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Generate AI Forecast
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={handleClearForecasts}
+                  disabled={loading || forecasts.length === 0}
+                  className="gap-2 text-slate-500 border-slate-200"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Clear Results
+                </Button>
+                <Button 
+                  onClick={handleGenerateForecast} 
+                  disabled={loading}
+                  className="gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white border-none shadow-lg shadow-indigo-200"
+                >
+                  {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  Generate AI Forecast
+                </Button>
+              </div>
             )}
           </div>
 

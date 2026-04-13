@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Upload, Download, Trash2, Calendar, BarChart3 } from 'lucide-react';
+import { Upload, Download, Trash2, Calendar, BarChart3, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ForecastVolume {
@@ -229,6 +229,50 @@ export default function ForecastVolume({ isAdmin }: { isAdmin: boolean }) {
             </label>
           </div>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Days</p>
+              <p className="text-xl font-bold text-slate-900">{volumes.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Avg Volume</p>
+              <p className="text-xl font-bold text-slate-900">
+                {volumes.length > 0 
+                  ? Math.round(volumes.reduce((acc, v) => acc + v.totalVolume, 0) / volumes.length).toLocaleString() 
+                  : 0}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Peak Volume</p>
+              <p className="text-xl font-bold text-slate-900">
+                {volumes.length > 0 
+                  ? Math.max(...volumes.map(v => v.totalVolume)).toLocaleString() 
+                  : 0}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden">
