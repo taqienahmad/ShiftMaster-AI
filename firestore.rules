@@ -1,0 +1,209 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: employees
+    // Fields:
+    //   - nip: string (required)
+    //   - name: string (required)
+    //   - email: string (optional)
+    //   - skill: string (required)
+    //   - channel: string (optional)
+    //   - site: string (optional)
+    //   - gender: string (optional, enum: L, P)
+    //   - religion: string (optional)
+    //   - role: string (optional)
+    //   - department: string (optional)
+    //   - skills: list (optional)
+    //
+    // Collection: shifts
+    // Fields:
+    //   - employeeId: string (required)
+    //   - employeeName: string (required)
+    //   - startTime: timestamp (required)
+    //   - endTime: timestamp (required)
+    //   - type: string (required, enum: morning, afternoon, night)
+    //   - status: string (required, enum: scheduled, completed, cancelled)
+    //
+    // Collection: forecasts
+    // Fields:
+    //   - date: timestamp (required)
+    //   - predictedDemand: number (required)
+    //   - requiredStaffCount: int (required)
+    //
+    // Collection: shiftCodes
+    // Fields:
+    //   - code: string (required)
+    //   - name: string (required)
+    //   - startTime: string (required)
+    //   - endTime: string (required)
+    //
+    // Collection: forecastVolume
+    // Fields:
+    //   - date: string (required, YYYY-MM-DD)
+    //   - day: string (required)
+    //   - totalVolume: number (required)
+    //   - intervals: map (required)
+    //
+    // Collection: workingDaysRef
+    // Fields:
+    //   - month: string (required, MMM-yy)
+    //   - totalDays: number (required)
+    //   - workingDays: number (required)
+    //   - weekend: number (required)
+    //   - holiday: number (required)
+    //
+    // Collection: erlangResults
+    // Fields:
+    //   - date: string (required)
+    //   - day: string (required)
+    //   - totalAgents: number (required)
+    //   - peakAgents: number (required)
+    //   - intervalNeeds: map (required)
+    //   - shiftSuggestions: map (required)
+    //   - intervalSupply: map (required)
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "taqienahmad@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidEmployee(data) {
+      return data.keys().hasAll(['name', 'nip', 'skill']) &&
+             data.name is string && data.name.size() > 0 &&
+             data.nip is string && data.nip.size() > 0 &&
+             data.skill is string && data.skill.size() > 0;
+    }
+
+    function isValidShift(data) {
+      return data.keys().hasAll(['employeeId', 'employeeName', 'startTime', 'endTime', 'type', 'status']) &&
+             data.employeeId is string &&
+             data.employeeName is string &&
+             data.startTime is timestamp &&
+             data.endTime is timestamp &&
+             data.type in ['morning', 'afternoon', 'night'] &&
+             data.status in ['scheduled', 'completed', 'cancelled'];
+    }
+
+    function isValidForecast(data) {
+      return data.keys().hasAll(['date', 'predictedDemand', 'requiredStaffCount']) &&
+             data.date is timestamp &&
+             data.predictedDemand is number &&
+             data.requiredStaffCount is int;
+    }
+
+    function isValidShiftCode(data) {
+      return data.keys().hasAll(['code', 'name', 'startTime', 'endTime']) &&
+             data.code is string && data.code.size() > 0 &&
+             data.name is string && data.name.size() > 0 &&
+             data.startTime is string && data.startTime.matches("^\\d{2}:\\d{2}$") &&
+             data.endTime is string && data.endTime.matches("^\\d{2}:\\d{2}$");
+    }
+
+    function isValidForecastVolume(data) {
+      return data.keys().hasAll(['date', 'day', 'totalVolume', 'intervals']) &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.day is string &&
+             data.totalVolume is number &&
+             data.intervals is map;
+    }
+
+    function isValidWorkingDaysRef(data) {
+      return data.keys().hasAll(['month', 'totalDays', 'workingDays', 'weekend', 'holiday']) &&
+             data.month is string &&
+             data.totalDays is number &&
+             data.workingDays is number &&
+             data.weekend is number &&
+             data.holiday is number;
+    }
+
+    function isValidErlangResult(data) {
+      return data.keys().hasAll(['date', 'day', 'totalAgents', 'peakAgents', 'intervalNeeds', 'shiftSuggestions', 'intervalSupply', 'assignments']) &&
+             data.date is string &&
+             data.day is string &&
+             data.totalAgents is number &&
+             data.peakAgents is number &&
+             data.intervalNeeds is map &&
+             data.shiftSuggestions is map &&
+             data.intervalSupply is map &&
+             data.assignments is map;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    match /employees/{employeeId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidEmployee(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /shifts/{shiftId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidShift(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /forecasts/{forecastId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidForecast(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /shiftCodes/{codeId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidShiftCode(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /forecastVolume/{date} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidForecastVolume(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /workingDaysRef/{month} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidWorkingDaysRef(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /erlangResults/{id} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidErlangResult(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /erlangSettings/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /roster/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

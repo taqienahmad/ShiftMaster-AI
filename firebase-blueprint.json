@@ -1,0 +1,97 @@
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "Represents a staff member in the organization.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the employee." },
+        "nip": { "type": "string", "description": "Employee identification number." },
+        "name": { "type": "string", "description": "Full name of the employee." },
+        "email": { "type": "string", "format": "email", "description": "Email address of the employee." },
+        "skill": { "type": "string", "description": "Primary skill or team (e.g., MPBK, PBK)." },
+        "channel": { "type": "string", "description": "Communication channel (e.g., Call, Chat)." },
+        "site": { "type": "string", "description": "Work location or site." },
+        "gender": { "type": "string", "enum": ["L", "P"], "description": "Gender (L for Male, P for Female)." },
+        "religion": { "type": "string", "description": "Religion of the employee." },
+        "role": { "type": "string", "description": "Job title or role of the employee." },
+        "department": { "type": "string", "description": "Department the employee belongs to." },
+        "skills": { "type": "array", "items": { "type": "string" }, "description": "List of skills the employee possesses." }
+      },
+      "required": ["name", "nip", "skill"]
+    },
+    "Shift": {
+      "title": "Shift",
+      "description": "Represents a scheduled work period for an employee.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the shift." },
+        "employeeId": { "type": "string", "description": "ID of the employee assigned to this shift." },
+        "employeeName": { "type": "string", "description": "Name of the employee (denormalized for display)." },
+        "startTime": { "type": "string", "format": "date-time", "description": "Start time of the shift." },
+        "endTime": { "type": "string", "format": "date-time", "description": "End time of the shift." },
+        "type": { "type": "string", "enum": ["morning", "afternoon", "night"], "description": "Type of shift." },
+        "status": { "type": "string", "enum": ["scheduled", "completed", "cancelled"], "description": "Current status of the shift." }
+      },
+      "required": ["employeeId", "startTime", "endTime", "type", "status"]
+    },
+    "Forecast": {
+      "title": "Forecast",
+      "description": "Represents predicted staffing needs for a specific date.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the forecast." },
+        "date": { "type": "string", "format": "date", "description": "The date for which the forecast is made." },
+        "predictedDemand": { "type": "number", "description": "Predicted volume of work/customers." },
+        "requiredStaffCount": { "type": "integer", "description": "Number of staff members required to meet the demand." }
+      },
+      "required": ["date", "predictedDemand", "requiredStaffCount"]
+    },
+    "ShiftCode": {
+      "title": "Shift Code",
+      "description": "Defines a shift pattern with a code and specific hours.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "description": "Short code for the shift (e.g., S1, M1)." },
+        "name": { "type": "string", "description": "Descriptive name (e.g., Morning Shift)." },
+        "startTime": { "type": "string", "description": "Start time in HH:mm format." },
+        "endTime": { "type": "string", "description": "End time in HH:mm format." }
+      },
+      "required": ["code", "name", "startTime", "endTime"]
+    },
+    "ForecastVolume": {
+      "title": "Forecast Volume",
+      "description": "Represents the work volume per interval for a specific date.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date", "description": "The date in YYYY-MM-DD format." },
+        "day": { "type": "string", "description": "Day of the week (e.g., Mon, Tue)." },
+        "totalVolume": { "type": "number", "description": "Total volume for the day." },
+        "intervals": { "type": "object", "description": "Map of time intervals to volume values." }
+      },
+      "required": ["date", "day", "totalVolume", "intervals"]
+    }
+  },
+  "firestore": {
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Collection of employee records."
+    },
+    "/shifts/{shiftId}": {
+      "schema": "Shift",
+      "description": "Collection of scheduled shifts."
+    },
+    "/forecasts/{forecastId}": {
+      "schema": "Forecast",
+      "description": "Collection of staffing forecasts."
+    },
+    "/shiftCodes/{codeId}": {
+      "schema": "ShiftCode",
+      "description": "Collection of shift code definitions."
+    },
+    "/forecastVolume/{date}": {
+      "schema": "ForecastVolume",
+      "description": "Collection of daily volume data per interval."
+    }
+  }
+}
